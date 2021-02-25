@@ -90,7 +90,7 @@ class Env {
 
   virtual uint64_t NowNanos() = 0;
 
-	virtual uint64_t NowCPUNanos() = 0;
+  virtual uint64_t NowCPUNanos() = 0;
 
   // Returns the ID of the current thread.
   virtual uint64_t GetThreadID() const;
@@ -154,15 +154,15 @@ class EnvWrapper : public Env {
   }
 
   uint64_t NowMicros() override {
-		return target_->NowMicros();
+    return target_->NowMicros();
   }
 
   uint64_t NowNanos() override {
-		return target_->NowNanos();
+    return target_->NowNanos();
   }
 
-  uint64_t NowCpuNanos() override {
-		return target_->NowCPUNanos();
+  uint64_t NowCPUNanos() override {
+    return target_->NowCPUNanos();
   }
 
   std::string TimeToString(uint64_t time) override {
