@@ -15,7 +15,7 @@
 class Env {
  public:
 
-  Env() {}
+  Env() = default;
 
   virtual ~Env();
 
@@ -30,8 +30,6 @@ class Env {
 
   // Priority for scheduling job in thread pool
   enum Priority { BOTTOM, LOW, HIGH, USER, TOTAL };
-
-  static std::string PriorityToString(Priority priority);
 
   // Priority for requesting bytes in rate limiter scheduler
   enum IOPriority { IO_LOW = 0, IO_HIGH = 1, IO_TOTAL = 2 };
@@ -111,7 +109,7 @@ class EnvWrapper : public Env {
  public:
   // Initialize an EnvWrapper that delegates all calls to *t
   explicit EnvWrapper(Env* t) : target_(t) {}
-  ~EnvWrapper() override;
+  ~EnvWrapper();
 
   // Return the target to which this Env forwards all calls
   Env* target() const { return target_; }
