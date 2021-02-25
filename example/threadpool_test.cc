@@ -9,16 +9,17 @@
 using std::cout;
 using std::endl;
 
-void Thread1(int id) {
+static void Thread1(void *ptr) {
+	int *pthread_id = reinterpret_cast<int*>(ptr);
 	int count = THREAD_COUNT;
 	while(count --) {
-		printf("------- *%d* running ------- \n");
+		printf("------- *%d* running ------- \n", *pthread_id);
 		sleep(1);
 	}
 }
 
 void PrintEnvInfo(Env *env) {
-	if (evn == nullptr) {
+	if (env == nullptr) {
 		return;
 	}
 
@@ -30,9 +31,10 @@ void PrintEnvInfo(Env *env) {
 	low_thread_nums = env->GetThreadPoolQueueLen(Env::Priority::LOW);
 	high_thread_nums = env->GetThreadPoolQueueLen(Env::Priority::HIGH);
 
-	cout << "time : " << env->TimeToString(time) << endl;
-	cout << "low thread nums: " << low_thread_nums << endl;
-	cout << "high thread nums: " << high_thread_nums << endl;
+	cout << "time : " << env->TimeToString(time)
+	     << "low thread nums: " << low_thread_nums
+	     << "high thread nums: " << high_thread_nums
+	     << endl;
 
 }
 
@@ -44,9 +46,9 @@ int main(int argc, char *argv[]) {
 
 	for (int i = 0;i < 10; i ++) {
 		if (i % 2 == 0) {
-			env->Schedule(Thread1, i, Env::Priority::LOW);
+			env->Schedule(&Thread1, &i, Env::Priority::LOW);
 		} else {
-			env->Schedule(Thread1, i, Env::Priority::HIGH);
+			env->Schedule(&Thread1, &i, Env::Priority::HIGH);
 		}
 
 		PrintEnvInfo(env);

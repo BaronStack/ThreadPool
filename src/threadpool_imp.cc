@@ -19,6 +19,8 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 #include <algorithm>
 #include <atomic>
 #include <condition_variable>
