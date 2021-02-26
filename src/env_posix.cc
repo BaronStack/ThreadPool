@@ -37,11 +37,11 @@
 #include "threadpool_imp.h"
 #include "env.h"
 
-class PosixEnv : public Env {
+class ThreadPoolEnv : public Env {
  public:
-  PosixEnv();
+  ThreadPoolEnv();
 
-  ~PosixEnv() override {
+  ~ThreadPoolEnv() override {
     for (const auto tid : threads_to_join_) {
       pthread_join(tid, nullptr);
     }
@@ -170,7 +170,7 @@ class PosixEnv : public Env {
   std::vector<pthread_t> threads_to_join_;
 };
 
-PosixEnv::PosixEnv()
+ThreadPoolEnv::ThreadPoolEnv()
       : thread_pools_(Priority::TOTAL) {
   ThreadPoolImpl::PthreadCall("mutex_init", pthread_mutex_init(&mu_, nullptr));
   for (int pool_id = 0; pool_id < Env::Priority::TOTAL; ++pool_id) {
@@ -181,17 +181,17 @@ PosixEnv::PosixEnv()
   }
 }
 
-void PosixEnv::Schedule(void (*function)(void* arg1), void* arg, Priority pri,
+void ThreadPoolEnv::Schedule(void (*function)(void* arg1), void* arg, Priority pri,
                         void* tag, void (*unschedFunction)(void* arg)) {
   assert(pri >= Priority::BOTTOM && pri <= Priority::HIGH);
   thread_pools_[pri].Schedule(function, arg, tag, unschedFunction);
 }
 
-int PosixEnv::UnSchedule(void* arg, Priority pri) {
+int ThreadPoolEnv::UnSchedule(void* arg, Priority pri) {
   return thread_pools_[pri].UnSchedule(arg);
 }
 
-unsigned int PosixEnv::GetThreadPoolQueueLen(Priority pri) const {
+unsigned int ThreadPoolEnv::GetThreadPoolQueueLen(Priority pri) const {
   assert(pri >= Priority::BOTTOM && pri <= Priority::HIGH);
   return thread_pools_[pri].GetQueueLen();
 }
@@ -208,7 +208,7 @@ static void* StartThreadWrapper(void* arg) {
   return nullptr;
 }
 
-void PosixEnv::StartThread(void (*function)(void* arg), void* arg) {
+void ThreadPoolEnv::StartThread(void (*function)(void* arg), void* arg) {
   pthread_t t;
   StartThreadState* state = new StartThreadState;
   state->user_function = function;
@@ -220,7 +220,7 @@ void PosixEnv::StartThread(void (*function)(void* arg), void* arg) {
   ThreadPoolImpl::PthreadCall("unlock", pthread_mutex_unlock(&mu_));
 }
 
-void PosixEnv::WaitForJoin() {
+void ThreadPoolEnv::WaitForJoin() {
   for (const auto tid : threads_to_join_) {
     pthread_join(tid, nullptr);
   }
@@ -239,9 +239,9 @@ Env* Env::Default() {
   //
   // Since static members are destructed in the reverse order
   // of their construction, having this call here guarantees that
-  // the destructor of static PosixEnv will go first, then the
+  // the destructor of static ThreadPoolEnv will go first, then the
   // the singletons of ThreadLocalPtr.
-  static PosixEnv default_env;
+  static ThreadPoolEnv default_env;
   return &default_env;
 }
 

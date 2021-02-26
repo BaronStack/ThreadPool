@@ -1,21 +1,45 @@
 #include <iostream>
 #include <unistd.h>
+#include <atomic>
 
 #include "env.h"
 #include "threadpool.h"
 
-#define THREAD_COUNT 300
+#define THREAD_COUNT 10
 
 using std::cout;
 using std::endl;
 
+struct Cxt{
+	int thread_id;
+	std::atomic<int>* last_id;
+
+	Cxt(std::atomic<int>* p, int i) :
+	last_id(p), thread_id(i) {}
+};
+
 static void Thread1(void *ptr) {
-	int *pthread_id = reinterpret_cast<int*>(ptr);
+	Cxt *cxt = reinterpret_cast<Cxt*>(ptr);
 	int count = THREAD_COUNT;
 	while(count --) {
-		printf("------- *%d* running ------- \n", *pthread_id);
-		sleep(1);
+		printf("------- *%d* running ------- \n", cxt->thread_id);
+		sleep(2);
 	}
+}
+
+static void Thread2(void *ptr) {
+	Cxt *cxt = reinterpret_cast<Cxt*>(ptr);
+	int count = THREAD_COUNT;
+	while(count --) {
+		printf("------- *%d* running ------- \n", cxt->thread_id);
+		sleep(2);
+	}
+}
+
+static void finish1(void *ptr) {
+	Cxt *cxt = reinterpret_cast<Cxt*>(ptr);
+	printf("Finish excute %d\n", cxt->thread_id);
+	delete cxt;
 }
 
 void PrintEnvInfo(Env *env) {
@@ -31,28 +55,35 @@ void PrintEnvInfo(Env *env) {
 	low_thread_nums = env->GetThreadPoolQueueLen(Env::Priority::LOW);
 	high_thread_nums = env->GetThreadPoolQueueLen(Env::Priority::HIGH);
 
-	cout << "time : " << env->TimeToString(time)
-	     << "low thread nums: " << low_thread_nums
-	     << "high thread nums: " << high_thread_nums
+	cout << "time : " << env->TimeToString(time) << endl
+	     << "low thread nums: " << low_thread_nums << endl
+	     << "high thread nums: " << high_thread_nums << endl
+	     << "thread id: " << env->GetThreadID() << endl
 	     << endl;
 
 }
 
 int main(int argc, char *argv[]) {
 	Env *env = Env::Default();
+	std::atomic<int> last_id(0);
 
 	env->SetBackgroundThreads(3, Env::Priority::LOW);
 	env->SetBackgroundThreads(7, Env::Priority::HIGH);
 
-	for (int i = 0;i < 10; i ++) {
-		if (i % 2 == 0) {
-			env->Schedule(&Thread1, &i, Env::Priority::LOW);
+	for (int i = 0, j = 0;i < 10; j++,i ++) {
+		Cxt cxt_i(&last_id, i);
+		Cxt cxt_j(&last_id, j);
+		if (i % 2 == 0 ) {
+			env->Schedule(&Thread1, &cxt_i, Env::Priority::LOW, &cxt_i, &finish1);
 		} else {
-			env->Schedule(&Thread1, &i, Env::Priority::HIGH);
+			env->Schedule(&Thread2, &cxt_j, Env::Priority::HIGH, &cxt_j, &finish1);
 		}
 
 		PrintEnvInfo(env);
 	}
+
+	Cxt cxt_us(&last_id, 1);
+	env->UnSchedule(&cxt_us, Env::Priority::LOW);
 
 	return 0;
 }

@@ -18,7 +18,7 @@ STATIC_LIBPATH = ../libthreadpool.a
 all : threadpool_test
 
 threadpool_test: threadpool_test.cc
-	$(CC) $(CFLAGS) $(INCLUDE_PATH) -lthreadpool $@.cc -o$@  $(LDFLAGS)
+	$(CC) $(CFLAGS) $(INCLUDE_PATH) $($LIBPATH) $@.cc -o$@  $(LDFLAGS)
 
 # 4. clean the files except source file
 clean:

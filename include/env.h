@@ -91,7 +91,7 @@ class Env {
   virtual uint64_t NowCPUNanos() = 0;
 
   // Returns the ID of the current thread.
-  virtual uint64_t GetThreadID() const;
+  virtual uint64_t GetThreadID() const = 0;
 
 // This seems to clash with a macro on Windows, so #undef it here
 #undef GetFreeSpace
