@@ -1,11 +1,14 @@
 ## Description
-This is a ThreadPool with C++.
+This is a ThreadPool with C++ language.
 
-Support some feature:
+Support some features:
 - Maintain a pool to automatic create,run,destroy a thread.
 - Dynamic increase/descrease the thread pool's thread nums
 - Support adjust the thread's CPU and I/O priority
 - Expand your environment with inherit `Class Env`
+
+There is a chinese blog to describe the implementation of this threadpool which is written by me.
+[A industrial threadpool's implementation](https://blog.csdn.net/Z_Stand/article/details/114156801?spm=1001.2014.3001.5502)
 
 ## Install
 - for lib and static lib: `make all`
@@ -14,13 +17,15 @@ Support some feature:
     cd example
     make all
     ```
-    > Before you compile example, first step must be excuted to produce shared lib
+    > Before you compile the example, the libthreadpool.so must be produced
+    > in the first step.  
 
 ## API
 ### Create ThreadPool
 ```c++
 Env *env = Env::Default();
 ```
+The interface will produce a PosixEnv to init multi threadpools with LOW/HIGH/USER .etc.
 
 ### Schedule thread
 ```c
