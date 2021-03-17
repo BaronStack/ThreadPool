@@ -10,7 +10,11 @@ Support some features:
 There is a chinese blog to describe the implementation of this threadpool which is written by me.
 [A industrial threadpool's implementation](https://blog.csdn.net/Z_Stand/article/details/114156801?spm=1001.2014.3001.5502)
 
-## Install
+## Compile
+> compile 
+> os: centos7.3.1611
+> gcc: 5.3
+
 - for lib and static lib: `make all`
 - for example test: 
     ```c
@@ -23,7 +27,7 @@ There is a chinese blog to describe the implementation of this threadpool which 
 ## API
 ### Create ThreadPool
 ```c++
-Env *env = Env::Default();
+auto* thread_pool = new ThreadPoolImpl();
 ```
 The interface will produce a PosixEnv to init multi threadpools with LOW/HIGH/USER .etc.
 
@@ -59,21 +63,31 @@ Means that the 'LOW' threadpool has less than 10 threads.
 For the detail ,you can see the `example/threadpool_test.cc`
 
 ```c
-// create a thread pool
-Env *env = Env::Default();
+std::atomic<int> last_id(0);
 
-// seperate the thread pool with low and high tags
-env->SetBackgroundThreads(3, Env::Priority::LOW);
-env->SetBackgroundThreads(7, Env::Priority::HIGH);
+auto* thread_pool1 = new ThreadPoolImpl();
+auto* thread_pool2 = new ThreadPoolImpl();
+
+// Set the background threads in threadpool
+// threadpool1 have 3 threads and with lower IO priority
+// threadpool2 have 7 threads and with lower CPU priority
+thread_pool1->SetBackgroundThreads(3);
+thread_pool2->SetBackgroundThreads(7);
+
+thread_pool1->LowerIOPriority();
+thread_pool2->LowerCPUPriority();
 
 for (int i = 0, j = 0;i < 10; j++,i ++) {
     Cxt cxt_i(&last_id, i);
     Cxt cxt_j(&last_id, j);
     if (i % 2 == 0 ) {
-        env->Schedule(&Thread1, &cxt_i, Env::Priority::LOW, &cxt_i, &finish1);
+        thread_pool1->Schedule(&Thread1, &cxt_i, &cxt_i, &finish1);
     } else {
-        env->Schedule(&Thread2, &cxt_j, Env::Priority::HIGH, &cxt_j, &finish1);
+        thread_pool2->Schedule(&Thread2, &cxt_j, &cxt_j, &finish1);
     }
 }
-```
 
+Cxt cxt_us(&last_id, 1);
+thread_pool1->UnSchedule(&cxt_us);
+thread_pool2->UnSchedule(&cxt_us);
+```

@@ -15,11 +15,14 @@ INCLUDE_PATH = -I ../include
 LIBPATH = ../libthreadpool.so
 STATIC_LIBPATH = ../libthreadpool.a
 
-all : threadpool_test
+all : threadpool_test env_thread_test
 
 threadpool_test: threadpool_test.cc
-	$(CC) $(CFLAGS) $(INCLUDE_PATH) $($LIBPATH) $@.cc -o$@  $(LDFLAGS)
+	$(CC) $(CFLAGS) $(INCLUDE_PATH) $(LIBPATH) $@.cc -o$@  $(LDFLAGS)
+
+env_thread_test: env_thread_test.cc
+	$(CC) $(CFLAGS) $(INCLUDE_PATH) $(LIBPATH) $@.cc -o$@  $(LDFLAGS)
 
 # 4. clean the files except source file
 clean:
-	rm -f ./threadpool_test
+	rm -f ./threadpool_test ./env_thread_test

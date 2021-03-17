@@ -2,8 +2,8 @@
 #include <unistd.h>
 #include <atomic>
 
-#include "env.h"
 #include "threadpool.h"
+#include "threadpool_imp.h"
 
 #define THREAD_COUNT 10
 
@@ -15,7 +15,7 @@ struct Cxt{
 	std::atomic<int>* last_id;
 
 	Cxt(std::atomic<int>* p, int i) :
-	last_id(p), thread_id(i) {}
+	thread_id(i),last_id(p) {}
 };
 
 static void Thread1(void *ptr) {
@@ -42,48 +42,34 @@ static void finish1(void *ptr) {
 	delete cxt;
 }
 
-void PrintEnvInfo(Env *env) {
-	if (env == nullptr) {
-		return;
-	}
-
-	int low_thread_nums;
-	int high_thread_nums;
-	uint64_t time;
-
-	time = env->NowMicros();
-	low_thread_nums = env->GetThreadPoolQueueLen(Env::Priority::LOW);
-	high_thread_nums = env->GetThreadPoolQueueLen(Env::Priority::HIGH);
-
-	cout << "time : " << env->TimeToString(time) << endl
-	     << "low thread nums: " << low_thread_nums << endl
-	     << "high thread nums: " << high_thread_nums << endl
-	     << "thread id: " << env->GetThreadID() << endl
-	     << endl;
-
-}
-
 int main(int argc, char *argv[]) {
-	Env *env = Env::Default();
 	std::atomic<int> last_id(0);
 
-	env->SetBackgroundThreads(3, Env::Priority::LOW);
-	env->SetBackgroundThreads(7, Env::Priority::HIGH);
+	auto* thread_pool1 = new ThreadPoolImpl();
+	auto* thread_pool2 = new ThreadPoolImpl();
+
+	// Set the background threads in threadpool
+	// threadpool1 have 3 threads and with lower IO priority
+	// threadpool2 have 7 threads and with lower CPU priority
+	thread_pool1->SetBackgroundThreads(3);
+	thread_pool2->SetBackgroundThreads(7);
+
+	thread_pool1->LowerIOPriority();
+	thread_pool2->LowerCPUPriority();
 
 	for (int i = 0, j = 0;i < 10; j++,i ++) {
 		Cxt cxt_i(&last_id, i);
 		Cxt cxt_j(&last_id, j);
 		if (i % 2 == 0 ) {
-			env->Schedule(&Thread1, &cxt_i, Env::Priority::LOW, &cxt_i, &finish1);
+			thread_pool1->Schedule(&Thread1, &cxt_i, &cxt_i, &finish1);
 		} else {
-			env->Schedule(&Thread2, &cxt_j, Env::Priority::HIGH, &cxt_j, &finish1);
+			thread_pool2->Schedule(&Thread2, &cxt_j, &cxt_j, &finish1);
 		}
-
-		PrintEnvInfo(env);
 	}
 
 	Cxt cxt_us(&last_id, 1);
-	env->UnSchedule(&cxt_us, Env::Priority::LOW);
+	thread_pool1->UnSchedule(&cxt_us);
+	thread_pool2->UnSchedule(&cxt_us);
 
 	return 0;
 }
