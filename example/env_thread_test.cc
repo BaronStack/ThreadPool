@@ -1,11 +1,3 @@
-//
-// Created by jxz on 2021/12/4.
-//
-
-//
-// Created by zhanghuigui on 2021/3/17.
-//
-
 #include <iostream>
 #include <unistd.h>
 #include <atomic>

@@ -12,5 +12,5 @@ add_library(thread_pool STATIC
 add_executable(threadPool example/env_thread_test.cc)
 target_link_libraries(threadPool  thread_pool -lpthread)
 
-add_executable(env_thread_test example/env_thread_test.cc)
+add_executable(env_thread_test example/threadpool_test.cc)
 target_link_libraries(env_thread_test thread_pool -lpthread)
