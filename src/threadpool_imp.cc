@@ -330,7 +330,7 @@ void ThreadPoolImpl::Impl::Submit(std::function<void()> &&schedule,
         return;
     }
 
-    StartBGThreads();
+    StartBGThreads(); // 启动线程
 
     // Add to priority queue
     queue_.push_back(BGItem());

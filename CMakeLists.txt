@@ -9,6 +9,7 @@ add_library(thread_pool STATIC
         src/env_posix.cc
         src/threadpool_imp.cc)
 add_definitions(-DOS_LINUX)
+
 add_executable(thread_pool_test example/env_thread_test.cc)
 target_link_libraries(thread_pool_test  thread_pool -lpthread)
 
