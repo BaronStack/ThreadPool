@@ -15,7 +15,8 @@
 #include <functional>
 
 
-class ThreadPoolImpl : public ThreadPool {
+class ThreadPoolImpl : public ThreadPool { // 线程类，这是对线程池具体实现的封装，
+    // 提供了操作线程池的数据结构和接口，实际线程池的实现在threadpool_impl.cc中
  public:
   ThreadPoolImpl();
   ~ThreadPoolImpl();
@@ -89,7 +90,7 @@ class ThreadPoolImpl : public ThreadPool {
 
   static void PthreadCall(const char* label, int result);
 
-  struct Impl;
+  struct Impl; // 线程类中具体的数据结构，涉及线程池的具体实现
 
  private:
 
@@ -105,6 +106,14 @@ class ThreadPoolImpl : public ThreadPool {
    // and override the environment. This would require refactoring ThreadPool usage.
    //
    // We can also combine these two approaches
+   //
+   // 当前的公共虚拟接口不提供可用的功能，因此不能在内部用于外观不同的实现。
+   //
+   // 我们提出了一个 pimpl 习惯用法，以便轻松替换线程池 impl，无需接触头文件，但提供不同的 .cc 潜在的 CMake 选项驱动。
+   //
+   // 另一种选择是引入 Env::MakeThreadPool() 虚拟接口并覆盖环境。这将需要重构 ThreadPool 的使用。
+   //
+   // 我们也可以结合这两种方法
    std::unique_ptr<Impl>   impl_;
 };
 
