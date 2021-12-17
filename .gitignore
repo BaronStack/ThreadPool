@@ -51,3 +51,4 @@ tp2/
 fbcode/
 fbcode
 buckifier/*.pyc
+cmake-build-debug
